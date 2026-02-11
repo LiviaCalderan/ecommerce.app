@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 import java.util.UUID;
 
 @Data
-@Entity
+@Entity(name = "user_table")
 @AllArgsConstructor
 @NoArgsConstructor
 public class User {

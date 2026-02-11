@@ -21,4 +21,10 @@ public class User {
     private UUID Id;
     private String firstName;
     private String surname;
+    private String email;
+    private String phone;
+    private UserRole ROLE = UserRole.CUSTOMER;
+
+
+
 }

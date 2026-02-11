@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -21,11 +22,11 @@ public class UserService {
         userRepository.save(user);
     }
 
-    public Optional<User> fetchUser(Long id) {
+    public Optional<User> fetchUser(UUID id) {
         return userRepository.findById(id);
     }
 
-    public boolean updateUser(Long id, User userUpdate) {
+    public boolean updateUser(UUID id, User userUpdate) {
         return userRepository.findById(id)
                 .map(existingUser -> {
                     existingUser.setFirstName(userUpdate.getFirstName());

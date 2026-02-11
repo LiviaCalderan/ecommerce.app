@@ -1,5 +1,7 @@
 package com.app.ecommerce.controller;
 
+import com.app.ecommerce.dto.UserRequest;
+import com.app.ecommerce.dto.UserResponse;
 import com.app.ecommerce.model.User;
 import com.app.ecommerce.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -18,27 +20,27 @@ public class UserController {
     private final UserService userService;
 
     @GetMapping
-    public ResponseEntity<List<User>> getAllUsers() {
+    public ResponseEntity<List<UserResponse>> getAllUsers() {
         return new ResponseEntity<>(userService.fetchAllUsers(), HttpStatus.OK);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<User> getUser(@PathVariable UUID id){
+    public ResponseEntity<UserResponse> getUser(@PathVariable UUID id){
         return userService.fetchUser(id)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @PostMapping
-    public ResponseEntity<String> createUser(@RequestBody User user){
-        userService.addUser(user);
+    public ResponseEntity<String> createUser(@RequestBody UserRequest userRequest){
+        userService.addUser(userRequest);
         return ResponseEntity.ok("User added!!");
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<String> updateUser(@PathVariable UUID id,
-                                             @RequestBody User updateUser) {
-        boolean updated = userService.updateUser(id, updateUser);
+                                             @RequestBody UserRequest updateUserRequest) {
+        boolean updated = userService.updateUser(id, updateUserRequest);
         if(updated)
             return ResponseEntity.ok("User updated successfully!!");
         return ResponseEntity.notFound().build();

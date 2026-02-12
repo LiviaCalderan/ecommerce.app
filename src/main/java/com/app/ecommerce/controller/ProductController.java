@@ -1,5 +1,7 @@
 package com.app.ecommerce.controller;
 
+import com.app.ecommerce.dto.ProductRequest;
+import com.app.ecommerce.dto.ProductResponse;
 import com.app.ecommerce.model.Product;
 import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;

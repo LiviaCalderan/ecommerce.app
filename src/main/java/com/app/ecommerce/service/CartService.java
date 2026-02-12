@@ -1,6 +1,7 @@
 package com.app.ecommerce.service;
 
 import com.app.ecommerce.dto.CartItemRequest;
+import com.app.ecommerce.dto.CartItemResponse;
 import com.app.ecommerce.dto.ProductResponse;
 import com.app.ecommerce.model.CartItem;
 import com.app.ecommerce.model.Product;
@@ -8,13 +9,18 @@ import com.app.ecommerce.model.User;
 import com.app.ecommerce.repositories.CartItemRepository;
 import com.app.ecommerce.repositories.ProductRepository;
 import com.app.ecommerce.repositories.UserRepository;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.boot.context.config.ConfigDataResourceNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -75,4 +81,27 @@ public class CartService {
         }
         return false;
     }
+
+    public List<CartItemResponse> getCartItems(UUID userId) {
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("Usuário não encontrado com o ID: " + userId));
+
+        return cartItemRepository.findByUser(user)
+                .stream()
+                .map(this::mapToCartItemResponse)
+                .collect(Collectors.toList());
+    }
+
+
+    private CartItemResponse mapToCartItemResponse(CartItem cartItem) {
+        CartItemResponse response = new CartItemResponse();
+        response.setId(cartItem.getId());
+        response.setProduct(cartItem.getProduct());
+        response.setPrice(cartItem.getPrice());
+        response.setQuantity(cartItem.getQuantity());
+        return response;
+    }
+
 }
+

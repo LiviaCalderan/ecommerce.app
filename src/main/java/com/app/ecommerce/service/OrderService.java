@@ -1,7 +1,91 @@
 package com.app.ecommerce.service;
 
+import com.app.ecommerce.dto.CartItemResponse;
+import com.app.ecommerce.dto.OrderItemsDTO;
+import com.app.ecommerce.dto.OrderResponse;
+import com.app.ecommerce.model.Order;
+import com.app.ecommerce.model.OrderItems;
+import com.app.ecommerce.model.OrderStatus;
+import com.app.ecommerce.model.User;
+import com.app.ecommerce.repositories.OrderRepository;
+import com.app.ecommerce.repositories.UserRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
 @Service
+@RequiredArgsConstructor
 public class OrderService {
+
+    private final CartService cartService;
+    private final UserRepository userRepository;
+    private final OrderRepository orderRepository;
+
+    public Optional<OrderResponse> createOrder(String userId) {
+
+        // Validate: cart items
+
+        List<CartItemResponse> cartItems = cartService.getCartItems(UUID.fromString(userId));
+        if (cartItems.isEmpty()) {
+            return Optional.empty();
+        }
+        // Validate: User
+
+        Optional<User> userOptional = userRepository.findById(UUID.fromString(userId));
+        if (userOptional.isEmpty()) {
+            return Optional.empty();
+        }
+        User user = userOptional.get();
+
+        // Calculate: total price
+        BigDecimal totalPrice = cartItems.stream()
+                .map(CartItemResponse::getPrice)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        // Create: order
+        Order order = new Order();
+        order.setUser(user);
+        order.setStatus(OrderStatus.CONFIRMED);
+        order.setTotalAmount(totalPrice);
+        List<OrderItems> orderItems = cartItems.stream()
+                .map(item -> new OrderItems(
+                        null, item.getProduct(),
+                        item.getQuantity(),
+                        item.getPrice(),
+                        order
+                ))
+                .toList();
+
+        order.setItems(orderItems);
+        Order savedOrder = orderRepository.save(order);
+
+        // Clear the cart
+        cartService.clearCart(userId);
+
+        return Optional.of(mapToOrderResponse(savedOrder));
+
+    }
+
+    private OrderResponse mapToOrderResponse(Order order) {
+        return new OrderResponse(
+                order.getId(),
+                order.getTotalAmount(),
+                order.getStatus(),
+                order.getItems()
+                        .stream()
+                        .map(orderItem -> new OrderItemsDTO(
+                                orderItem.getId(),
+                                orderItem.getProduct().getId(),
+                                orderItem.getQuantity(),
+                                orderItem.getPrice(),
+                                orderItem.getPrice().multiply(new BigDecimal(orderItem.getQuantity()))
+                        ))
+                        .toList(),
+                order.getCreatedAt()
+        );
+    }
 }
